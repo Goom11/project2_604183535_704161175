@@ -3,25 +3,26 @@
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
+
+    if (argc != 4)
     {
-        fprintf(stderr,"usage: sender <portnumber>\n");
-        // fprintf(stderr,"usage: sender <portnumber> <CWnd> <Pl> <Pc>\n");
+        fprintf(stderr,"usage: receiver <hostname> <portnumber> <filename>\n");
         exit(1);
     }
 
-    char *port = argv[1];
+    char *hostname = argv[1];
+    char *port = argv[2];
+    char *filename = argv[3];
 
     struct addrinfo hints;
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
 
     struct addrinfo *servinfo;
     int rv;
 
-    if ((rv = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
+    if ((rv = getaddrinfo(hostname, port, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return 1;
     }
@@ -29,12 +30,20 @@ int main(int argc, char *argv[])
     struct addrinfo *p;
     int sockfd;
 
+    // printf("omg here we are 1\n");
     for(p = servinfo; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             perror("sender: socket");
             continue;
         }
+        // printf("omg here we are 2\n");
+        // int yes = 1;
+        // if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+            // perror("setsockopt");
+            // exit(1);
+        // }
         if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            // printf("omg here we are 3\n");
             close(sockfd);
             perror("sender: bind");
             continue;
@@ -47,21 +56,17 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    freeaddrinfo(servinfo);
+    printf("Bound to socket, about to send requested filename\n");
 
-    printf("Bound to socket, now waiting for requested filename\n");
-
-    struct sockaddr_storage their_addr;
-    socklen_t addr_len = sizeof their_addr;
     int numbytes;
-    char buf[MAXBUFLEN];
 
-    if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1, 0, (struct sockaddr *)&their_addr, &addr_len)) == -1) {
-        fprintf(stderr, "Error: failed to receive filename\n");
+    if ((numbytes = sendto(sockfd, filename, strlen(filename), 0, p->ai_addr, p->ai_addrlen)) == -1) {
+        perror("Error: failed to send filename\n");
         exit(1);
     }
 
-    printf("The requested filename is: %s\n", buf);
-}
+    freeaddrinfo(servinfo);
 
+    printf("Sent requested filename, waiting for file\n");
+}
 
