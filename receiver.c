@@ -30,22 +30,9 @@ int main(int argc, char *argv[])
     struct addrinfo *p;
     int sockfd;
 
-    // printf("omg here we are 1\n");
     for(p = servinfo; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             perror("sender: socket");
-            continue;
-        }
-        // printf("omg here we are 2\n");
-        // int yes = 1;
-        // if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-            // perror("setsockopt");
-            // exit(1);
-        // }
-        if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-            // printf("omg here we are 3\n");
-            close(sockfd);
-            perror("sender: bind");
             continue;
         }
         break;
