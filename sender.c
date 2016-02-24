@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    buf[numbytes] = '\0';
     printf("The requested filename is: %s\n", buf);
 }
 
