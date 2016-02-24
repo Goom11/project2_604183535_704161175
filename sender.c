@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+const int MAXBUFLEN = 1024;
+
 int main(int argc, char *argv[])
 {
     if (argc != 2)
@@ -32,9 +34,9 @@ int main(int argc, char *argv[])
     }
 
     struct addrinfo *p;
-
     int sockfd;
-    for(p = servinfo; p != NUL; p = p->ai.next) {
+
+    for(p = servinfo; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             perror("sender: socket");
             continue;
@@ -54,8 +56,19 @@ int main(int argc, char *argv[])
 
     freeaddrinfo(servinfo);
 
-    printf("Waiting for requested filename...\n");
+    printf("Bound to socket, now waiting for requested filename\n");
 
+    struct sockaddr_storage their_addr;
+    socklen_t addr_len = sizeof their_addr;
+    int numbytes;
+    char buf[MAXBUFLEN];
+
+    if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1, 0, (struct sockaddr *)&their_addr, &addr_len)) == -1) {
+        fprintf(stderr, "Error: failed to receive filename\n");
+        exit(1);
+    }
+
+    printf("The requested filename is: %s\n", buf);
 }
 
 
