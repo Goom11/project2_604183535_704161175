@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+#define MAXLEN 512
+
 int main(int argc, char *argv[])
 {
 
@@ -68,13 +71,13 @@ int main(int argc, char *argv[])
     int crc = 0;
 
     //empty file to copy data to
-    char newName = [MAXLEN];
+    char newName [MAXLEN];
     strcpy(newName, "new_");
     strcat(newName, argv[3]);
 
     FILE *fp = fopen(newName, "w+");
 
-    if (fp = null){
+    if (fp == NULL){
         printf("Error: new file cannot be created.");
         exit(1);
     }
