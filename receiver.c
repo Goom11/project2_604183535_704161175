@@ -1,6 +1,10 @@
 
 #include "protocol.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 int main(int argc, char *argv[])
 {
 
@@ -55,5 +59,24 @@ int main(int argc, char *argv[])
     freeaddrinfo(servinfo);
 
     printf("Sent requested filename, waiting for file\n");
+
+
+    // for receive call
+    int seq = 0;
+    int ack = 0;
+    int fin = 0;
+    int crc = 0;
+
+    //empty file to copy data to
+    char newName = [MAXLEN];
+    strcpy(newName, "new_");
+    strcat(newName, argv[3]);
+
+    FILE *fp = fopen(newName, "w+");
+
+    if (fp = null){
+        printf("Error: new file cannot be created.");
+        exit(1);
+    }
 }
 

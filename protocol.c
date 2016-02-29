@@ -22,10 +22,3 @@ int sendAsPacket(int sockfd, char *data, size_t dataLen, struct sockaddr *destAd
     free(tempBuf);
     return numbytes;
 }
-
-
-
-
-
-
-
