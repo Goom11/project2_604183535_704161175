@@ -22,3 +22,22 @@ int sendAsPacket(int sockfd, char *data, size_t dataLen, struct sockaddr *destAd
     free(tempBuf);
     return numbytes;
 }
+
+int receiveAsPacket (int sockfd, char *buf, size_t len, struct sockaddr *srcAddr, socklen_t addrLen, int *seq, int *ack, int *fin){
+    char temp[MAXDATALEN + HEADERSIZE];
+
+    bzero(buf, MAXDATALEN + HEADERSIZE);
+
+    int numbytes = recvfrom(sockfd, temp, MAXDATALEN + HEADERSIZE, 0, srcAddr, addrLen);
+
+
+    //eventually need to add crc
+    memcpy(seq, temp, sizeof(int));
+    memcpy(ack, temp+4, sizeof(int));
+    memcpy(fin, temp+8, sizeof(int));
+    memcpy(len, temp+12, sizeof(int));
+
+    memcpy(buf, temp+16, MAXDATALEN);
+
+    return numbytes;
+}
