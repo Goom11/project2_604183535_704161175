@@ -9,6 +9,16 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
-const int MAXBUFLEN = 1024;
+#define MAXDATALEN 512
+
+int sendAsPacket(int sockfd, char *buf, size_t len, struct sockaddr *destAddr, socklen_t addrLen, int seq, int ack, int fin);
+
+typedef struct MyPacket {
+    int seq;
+    int ack;
+    int fin;
+    int len;
+    char data[MAXDATALEN];
+} protocolPacket;
 
 #endif
