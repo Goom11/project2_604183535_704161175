@@ -31,12 +31,12 @@ int main(int argc, char *argv[])
 
     for(p = servinfo; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            perror("sender: socket");
+            fprintf(stderr, "sender: socket");
             continue;
         }
         if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
             close(sockfd);
-            perror("sender: bind");
+            fprintf(stderr, "sender: bind");
             continue;
         }
         break;
@@ -51,12 +51,12 @@ int main(int argc, char *argv[])
 
     printf("Bound to socket, now waiting for requested filename\n");
 
-    struct sockaddr_storage their_addr;
-    socklen_t addr_len = sizeof their_addr;
+    struct sockaddr_storage theirAddr;
+    socklen_t addrLen = sizeof theirAddr;
     int numbytes;
-    char buf[MAXBUFLEN];
+    char buf[MAXDATALEN];
 
-    if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1, 0, (struct sockaddr *)&their_addr, &addr_len)) == -1) {
+    if ((numbytes = recvfrom(sockfd, buf, MAXDATALEN-1, 0, (struct sockaddr *)&theirAddr, &addrLen)) == -1) {
         fprintf(stderr, "Error: failed to receive filename\n");
         exit(1);
     }
