@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     char *port = argv[1];
 
     struct addrinfo hints;
-    memset(&hints, 0, sizeof hints);
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_flags = AI_PASSIVE;
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     printf("Bound to socket, now waiting for requested filename\n");
 
     struct sockaddr_storage theirAddr;
-    socklen_t addrLen = sizeof theirAddr;
+    socklen_t addrLen = sizeof(theirAddr);
     int numbytes;
     char buf[MAXDATALEN];
 
@@ -63,6 +63,15 @@ int main(int argc, char *argv[])
 
     buf[numbytes] = '\0';
     printf("The requested filename is: %s\n", buf);
+
+    FILE *fp = fopen(buf, "r");
+    if (fp == NULL) {
+        // send filename back to indicate missing file
+        int rv = sendAsPacket(sockfd, buf, strlen(buf), (struct sockaddr *)&theirAddr, addrLen, -1, 0, 1);
+        fprintf(stderr, "Error: file not found\n");
+        exit(1);
+    }
+
 }
 
 
