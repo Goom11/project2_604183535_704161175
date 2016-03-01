@@ -1,6 +1,21 @@
 
 #include "protocol.h"
 
+void printPacket(protocolPacket packet) {
+    if (packet.numbytes < 0) {
+        printf("Invalid packet, cannot print\n");
+        return;
+    }
+    printf("Packet:\n");
+    printf("seq: %d\n", packet.seq);
+    printf("ack: %d\n", packet.ack);
+    printf("fin: %d\n", packet.fin);
+    printf("len: %d\n", packet.len);
+    printf("data: %*.*s\n", packet.len, packet.len, packet.data);
+    printf("numbytes: %zd\n", packet.numbytes);
+    return;
+}
+
 protocolPacket createPacket(int seq, int ack, int fin, char *data, size_t dataLen) {
     protocolPacket packet;
     memset(&packet, 0, sizeof(packet));
@@ -23,21 +38,16 @@ int sendAsPacket(int sockfd, char *data, size_t dataLen, struct sockaddr *destAd
     return numbytes;
 }
 
-int receiveAsPacket (int sockfd, char *buf, size_t len, struct sockaddr *srcAddr, socklen_t addrLen, int *seq, int *ack, int *fin){
-    char temp[MAXDATALEN + HEADERSIZE];
-
-    bzero(buf, MAXDATALEN + HEADERSIZE);
-
-    int numbytes = recvfrom(sockfd, temp, MAXDATALEN + HEADERSIZE, 0, srcAddr, addrLen);
-
-
-    //eventually need to add crc
-    memcpy(seq, temp, sizeof(int));
-    memcpy(ack, temp+4, sizeof(int));
-    memcpy(fin, temp+8, sizeof(int));
-    memcpy(len, temp+12, sizeof(int));
-
-    memcpy(buf, temp+16, MAXDATALEN);
-
-    return numbytes;
+protocolPacket receiveAsPacket(int sockfd, struct sockaddr *srcAddr, socklen_t *addrLen){
+    protocolPacket packet;
+    size_t packetSize = sizeof(packet);
+    char *tempBuf = malloc(packetSize);
+    memset(tempBuf, 0, packetSize);
+    int numbytes = recvfrom(sockfd, tempBuf, packetSize, 0, srcAddr, addrLen);
+    memcpy((char *)&packet, tempBuf, packetSize);
+    if (numbytes == -1) {
+        packet.numbytes = -1;
+    }
+    free(tempBuf);
+    return packet;
 }
