@@ -64,14 +64,14 @@ int main(int argc, char *argv[])
     printf("Sent requested filename, waiting for file\n");
 
 
-    // for receive call
-    int seq = 0;
-    int ack = 0;
-    int fin = 0;
-    int crc = 0;
+    // for receive call, create zeroed packet
+    protocolPacket packet;
+    memset(&packet, 0, sizeof(packet));
+    packet.fin = 0;
+    size_t packetSize = sizeof(packet);
 
     //empty file to copy data to
-    char newName [MAXLEN];
+    char newName[MAXLEN];
     strcpy(newName, "new_");
     strcat(newName, argv[3]);
 
@@ -80,6 +80,19 @@ int main(int argc, char *argv[])
     if (fp == NULL){
         printf("Error: new file cannot be created.");
         exit(1);
+    }
+
+    while(packet.fin != 1) {
+        packet = receiveAsPacket(sockfd, p->ai_addr, &(p->ai_addrlen));
+        printPacket(packet);
+
+        if(packet.numbytes == -1) {
+            fprintf(stderr, "Error: failed to receive file or packet\n");
+            exit(1);
+        } else if(packet.seq == 0 && packet.fin == 1) {
+            fprintf(stderr, "Error: file not found\n");
+            exit(1);
+        }
     }
 }
 
