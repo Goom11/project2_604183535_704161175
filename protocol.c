@@ -16,6 +16,10 @@ void printPacket(protocolPacket packet) {
     return;
 }
 
+protocolPacket createFileNotFoundPacket() {
+    return createPacket(0, 0, 1, NULL, 0);
+}
+
 protocolPacket createPacket(int seq, int ack, int fin, char *data, size_t dataLen) {
     protocolPacket packet;
     memset(&packet, 0, sizeof(packet));
@@ -27,8 +31,7 @@ protocolPacket createPacket(int seq, int ack, int fin, char *data, size_t dataLe
     return packet;
 }
 
-int sendAsPacket(int sockfd, char *data, size_t dataLen, struct sockaddr *destAddr, socklen_t addrLen, int seq, int ack, int fin) {
-    protocolPacket packet = createPacket(seq, ack, fin, data, dataLen);
+int sendPacket(int sockfd, struct sockaddr *destAddr, socklen_t addrLen, protocolPacket packet) {
     size_t packetSize = sizeof(packet);
     char *tempBuf = malloc(packetSize);
     memset(tempBuf, 0, packetSize);
@@ -38,7 +41,7 @@ int sendAsPacket(int sockfd, char *data, size_t dataLen, struct sockaddr *destAd
     return numbytes;
 }
 
-protocolPacket receiveAsPacket(int sockfd, struct sockaddr *srcAddr, socklen_t *addrLen){
+protocolPacket receivePacket(int sockfd, struct sockaddr *srcAddr, socklen_t *addrLen){
     protocolPacket packet;
     size_t packetSize = sizeof(packet);
     char *tempBuf = malloc(packetSize);

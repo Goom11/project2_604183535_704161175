@@ -21,10 +21,14 @@ typedef struct MyPacket {
     size_t numbytes;
 } protocolPacket;
 
+protocolPacket createPacket(int seq, int ack, int fin, char *data, size_t dataLen);
+
+protocolPacket createFileNotFoundPacket();
+
 void printPacket(protocolPacket packet);
 
-int sendAsPacket(int sockfd, char *buf, size_t len, struct sockaddr *destAddr, socklen_t addrLen, int seq, int ack, int fin);
+int sendPacket(int sockfd, struct sockaddr *destAddr, socklen_t addrLen, protocolPacket packet);
 
-protocolPacket receiveAsPacket(int sockfd, struct sockaddr *srcAddr, socklen_t *addrLen);
+protocolPacket receivePacket(int sockfd, struct sockaddr *srcAddr, socklen_t *addrLen);
 
 #endif

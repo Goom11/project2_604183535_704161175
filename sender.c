@@ -66,8 +66,7 @@ int main(int argc, char *argv[])
 
     FILE *fp = fopen(buf, "r");
     if (fp == NULL) {
-        // send filename back to indicate missing file
-        int rv = sendAsPacket(sockfd, buf, strlen(buf), (struct sockaddr *)&theirAddr, addrLen, 0, 0, 1);
+        int rv = sendPacket(sockfd, (struct sockaddr *)&theirAddr, addrLen, createFileNotFoundPacket());
         fprintf(stderr, "Error: file not found\n");
         exit(1);
     }

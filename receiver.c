@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     }
 
     while(packet.fin != 1) {
-        packet = receiveAsPacket(sockfd, p->ai_addr, &(p->ai_addrlen));
+        packet = receivePacket(sockfd, p->ai_addr, &(p->ai_addrlen));
         printPacket(packet);
 
         if(packet.numbytes == -1) {
