@@ -64,13 +64,51 @@ int main(int argc, char *argv[])
     buf[numbytes] = '\0';
     printf("The requested filename is: %s\n", buf);
 
+
+    char *source = NULL;
     FILE *fp = fopen(buf, "r");
+    size_t sourceLen;
+
     if (fp == NULL) {
         int rv = sendPacket(sockfd, (struct sockaddr *)&theirAddr, addrLen, createFileNotFoundPacket());
         fprintf(stderr, "Error: file not found\n");
         exit(1);
     }
 
+    if (fseek(fp, 0L, SEEK_END) == 0) {
+
+        long fileSize = ftell(fp);
+
+        if (fileSize == -1){
+            //no file found
+            int rv = sendPacket(sockfd, (struct sockaddr *)&theirAddr, addrLen, createFileNotFoundPacket());
+            fprintf(stderr, "Error: file size error\n");
+            exit(1);
+        }
+
+        source = malloc (sizeof(char) * fileSize + 1);
+
+        if (fseek(fp, 0L, SEEK_SET) != 0){
+            //file size error
+            int rv = sendPacket(sockfd, (struct sockaddr *)&theirAddr, addrLen, createFileNotFoundPacket());
+            fprintf(stderr, "Error: file size error\n");
+            free(source);
+            exit(1);
+        }
+
+        sourceLen = fread(source, sizeof(char), fileSize, fp);
+
+        if(sourceLen == 0){
+            int rv = sendPacket(sockfd, (struct sockaddr *)&theirAddr, addrLen, createFileNotFoundPacket());
+            fprintf(stderr, "Error: file reading error\n");
+            free(source);
+            exit(1);
+        }
+
+        source[sourceLen] = '\0';
+    }
+
+    fclose(fp);
 }
 
 
