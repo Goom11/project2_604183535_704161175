@@ -1,11 +1,60 @@
 
 #include "protocol.h"
 
+int verifyAndLoadFile(char buf[MAXDATALEN], char **source) {
+    FILE *fp = fopen(buf, "r");
+    int sourceLen = -1;
+
+    if (fp == NULL) {
+        fprintf(stderr, "Error: file not found\n");
+        return -1;
+    }
+
+    if (fseek(fp, 0L, SEEK_END) != 0) {
+        fclose(fp);
+        return -1;
+    }
+
+    long fileSize = ftell(fp);
+
+    // file size error
+    if (fileSize == -1){
+        fprintf(stderr, "Error: file size error\n");
+        fclose(fp);
+        return -1;
+    }
+
+    source = malloc(sizeof(char) * fileSize + 1);
+
+    // file size error
+    if (fseek(fp, 0L, SEEK_SET) != 0){
+        fprintf(stderr, "Error: file size error\n");
+        free(source);
+        fclose(fp);
+        return -1;
+    }
+
+    sourceLen = fread(source, sizeof(char), fileSize, fp);
+
+    // file reading error
+    if(sourceLen == 0){
+        fprintf(stderr, "Error: file reading error\n");
+        free(source);
+        fclose(fp);
+        return -1;
+    }
+
+    source[sourceLen] = '\0';
+
+    fclose(fp);
+    return sourceLen;
+}
+
 int main(int argc, char *argv[])
 {
     if (argc != 2)
     {
-        fprintf(stderr,"usage: sender <portnumber>\n");
+        fprintf(stderr,"usage: sender <portnumber> <CWnd>\n");
         // fprintf(stderr,"usage: sender <portnumber> <CWnd> <Pl> <Pc>\n");
         exit(1);
     }
@@ -51,12 +100,12 @@ int main(int argc, char *argv[])
 
     printf("Bound to socket, now waiting for requested filename\n");
 
-    struct sockaddr_storage theirAddr;
-    socklen_t addrLen = sizeof(theirAddr);
+    senderConnection conn = createSenderConnection(sockfd);
+
     int numbytes;
     char buf[MAXDATALEN];
 
-    if ((numbytes = recvfrom(sockfd, buf, MAXDATALEN-1, 0, (struct sockaddr *)&theirAddr, &addrLen)) == -1) {
+    if ((numbytes = recvfrom(sockfd, buf, MAXDATALEN-1, 0, (struct sockaddr *)&conn.theirAddr, &conn.addrLen)) == -1) {
         fprintf(stderr, "Error: failed to receive filename\n");
         exit(1);
     }
@@ -66,49 +115,26 @@ int main(int argc, char *argv[])
 
 
     char *source = NULL;
-    FILE *fp = fopen(buf, "r");
-    size_t sourceLen;
+    int loadFileRV = verifyAndLoadFile(buf, &source);
 
-    if (fp == NULL) {
-        int rv = sendPacket(sockfd, (struct sockaddr *)&theirAddr, addrLen, createFileNotFoundPacket());
-        fprintf(stderr, "Error: file not found\n");
+    if (loadFileRV == -1) {
+        sendPacket(conn, createFileNotFoundPacket());
         exit(1);
     }
+    size_t sourceLen = loadFileRV;
 
-    if (fseek(fp, 0L, SEEK_END) == 0) {
+    int cwnd = atoi(argv[2]);
 
-        long fileSize = ftell(fp);
+    protocolPacket packet;
+    memset(&packet, 0, sizeof(packet));
+    packet.seq = 0;
+    packet.ack = 0;
+    packet.fin = 0;
+    packet.len = 0;
 
-        if (fileSize == -1){
-            //no file found
-            int rv = sendPacket(sockfd, (struct sockaddr *)&theirAddr, addrLen, createFileNotFoundPacket());
-            fprintf(stderr, "Error: file size error\n");
-            exit(1);
-        }
-
-        source = malloc (sizeof(char) * fileSize + 1);
-
-        if (fseek(fp, 0L, SEEK_SET) != 0){
-            //file size error
-            int rv = sendPacket(sockfd, (struct sockaddr *)&theirAddr, addrLen, createFileNotFoundPacket());
-            fprintf(stderr, "Error: file size error\n");
-            free(source);
-            exit(1);
-        }
-
-        sourceLen = fread(source, sizeof(char), fileSize, fp);
-
-        if(sourceLen == 0){
-            int rv = sendPacket(sockfd, (struct sockaddr *)&theirAddr, addrLen, createFileNotFoundPacket());
-            fprintf(stderr, "Error: file reading error\n");
-            free(source);
-            exit(1);
-        }
-
-        source[sourceLen] = '\0';
+    while (packet.fin != 1) {
     }
 
-    fclose(fp);
 }
 
 

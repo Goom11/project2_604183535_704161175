@@ -31,12 +31,20 @@ protocolPacket createPacket(int seq, int ack, int fin, char *data, size_t dataLe
     return packet;
 }
 
-int sendPacket(int sockfd, struct sockaddr *destAddr, socklen_t addrLen, protocolPacket packet) {
+senderConnection createSenderConnection(int sockfd) {
+    return (senderConnection) { .sockfd = sockfd, .addrLen = sizeof(struct sockaddr_storage) };
+}
+
+receiverConnection createReceiverConnection(int sockfd, struct sockaddr *srcAddr, socklen_t *addrLen) {
+    return (receiverConnection) { .sockfd = sockfd, .srcAddr = srcAddr, .addrLen = addrLen };
+}
+
+int sendPacket(senderConnection conn, protocolPacket packet) {
     size_t packetSize = sizeof(packet);
     char *tempBuf = malloc(packetSize);
     memset(tempBuf, 0, packetSize);
     memcpy(tempBuf, (char *)&packet, packetSize);
-    int numbytes = sendto(sockfd, tempBuf, packetSize, 0, destAddr, addrLen);
+    int numbytes = sendto(conn.sockfd, tempBuf, packetSize, 0, (struct sockaddr *)&conn.theirAddr, conn.addrLen);
     free(tempBuf);
     return numbytes;
 }
