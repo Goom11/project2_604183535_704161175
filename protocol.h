@@ -31,13 +31,7 @@ typedef struct MyConnection {
     socklen_t *addrLen;
 } connection;
 
-typedef struct MySenderConnection {
-    int sockfd;
-    struct sockaddr_storage theirAddr;
-    socklen_t addrLen;
-} senderConnection;
-
-senderConnection createSenderConnection(int sockfd);
+connection createConnection(int sockfd, struct sockaddr *addr, socklen_t *addrLen);
 
 typedef struct MyReceiverConnection {
     int sockfd;
@@ -49,7 +43,7 @@ receiverConnection createReceiverConnection(int sockfd, struct sockaddr *srcAddr
 
 void printPacket(protocolPacket packet);
 
-int sendPacket(senderConnection conn, protocolPacket packet);
+int sendPacket(connection conn, protocolPacket packet);
 
 protocolPacket receivePacket(receiverConnection conn);
 

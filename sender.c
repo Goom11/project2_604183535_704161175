@@ -118,12 +118,15 @@ int main(int argc, char *argv[])
 
     printf("Bound to socket, now waiting for requested filename\n");
 
-    senderConnection conn = createSenderConnection(sockfd);
+    struct sockaddr_storage addr;
+    socklen_t addrLen = sizeof(addr);
+    connection conn = createConnection(sockfd, (struct sockaddr *)&addr, &addrLen);
+    // senderConnection conn = createSenderConnection(sockfd);
 
     int numbytes;
     char buf[MAXDATALEN];
 
-    if ((numbytes = recvfrom(conn.sockfd, buf, MAXDATALEN-1, 0, (struct sockaddr *)&conn.theirAddr, &conn.addrLen)) == -1) {
+    if ((numbytes = recvfrom(conn.sockfd, buf, MAXDATALEN-1, 0, (struct sockaddr *)conn.addr, conn.addrLen)) == -1) {
         fprintf(stderr, "Error: failed to receive filename\n");
         exit(1);
     }
