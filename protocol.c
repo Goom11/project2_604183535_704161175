@@ -35,10 +35,6 @@ connection createConnection(int sockfd, struct sockaddr *addr, socklen_t *addrLe
     return (connection) { .sockfd = sockfd, .addr = addr, .addrLen = addrLen };
 }
 
-receiverConnection createReceiverConnection(int sockfd, struct sockaddr *srcAddr, socklen_t *addrLen) {
-    return (receiverConnection) { .sockfd = sockfd, .srcAddr = srcAddr, .addrLen = addrLen };
-}
-
 int sendPacket(connection conn, protocolPacket packet) {
     size_t packetSize = sizeof(packet);
     char *tempBuf = malloc(packetSize);
@@ -49,12 +45,12 @@ int sendPacket(connection conn, protocolPacket packet) {
     return numbytes;
 }
 
-protocolPacket receivePacket(receiverConnection conn){
+protocolPacket receivePacket(connection conn){
     protocolPacket packet;
     size_t packetSize = sizeof(packet);
     char *tempBuf = malloc(packetSize);
     memset(tempBuf, 0, packetSize);
-    int numbytes = recvfrom(conn.sockfd, tempBuf, packetSize, 0, conn.srcAddr, conn.addrLen);
+    int numbytes = recvfrom(conn.sockfd, tempBuf, packetSize, 0, conn.addr, conn.addrLen);
     memcpy((char *)&packet, tempBuf, packetSize);
     if (numbytes == -1) {
         packet.numbytes = -1;

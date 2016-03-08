@@ -53,9 +53,9 @@ int main(int argc, char *argv[])
     printf("Bound to socket, about to send requested filename\n");
 
     int numbytes;
-    receiverConnection conn = createReceiverConnection(sockfd, p->ai_addr, &(p->ai_addrlen));
+    connection conn = createConnection(sockfd, p->ai_addr, &(p->ai_addrlen));
 
-    if ((numbytes = sendto(conn.sockfd, filename, strlen(filename), 0, conn.srcAddr, *(conn.addrLen))) == -1) {
+    if ((numbytes = sendto(conn.sockfd, filename, strlen(filename), 0, conn.addr, *(conn.addrLen))) == -1) {
         perror("Error: failed to send filename\n");
         exit(1);
     }

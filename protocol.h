@@ -33,18 +33,10 @@ typedef struct MyConnection {
 
 connection createConnection(int sockfd, struct sockaddr *addr, socklen_t *addrLen);
 
-typedef struct MyReceiverConnection {
-    int sockfd;
-    struct sockaddr *srcAddr;
-    socklen_t *addrLen;
-} receiverConnection;
-
-receiverConnection createReceiverConnection(int sockfd, struct sockaddr *srcAddr, socklen_t *addrLen);
-
 void printPacket(protocolPacket packet);
 
 int sendPacket(connection conn, protocolPacket packet);
 
-protocolPacket receivePacket(receiverConnection conn);
+protocolPacket receivePacket(connection conn);
 
 #endif
