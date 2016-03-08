@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
             exit(1);
         } 
 
-        else if(packet.seq == 0 && packet.fin == 1) {
+        else if(packet.seq == 0 && packet.fin == 1 && packet.len == 0) {
             fprintf(stderr, "Error: file not found\n");
             exit(1);
         }
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
             else{
                 printf("Sent ACK #%d\n", packet.seq);
                 memcpy(fileBuf+packet.seq, packet.data, packet.len);
-                tracker +=MAXDATALEN
+                tracker +=MAXDATALEN;
                 if (packet.fin == 1){
                     printf("FIN received\n");
                     printf("FINACK sent\n");
