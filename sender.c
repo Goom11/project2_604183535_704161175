@@ -10,15 +10,6 @@ int numberOfPacketsLeftInFile(size_t sourceLen, int currentPosition) {
     return (sourceLen - currentPosition + (MAXDATALEN - 1)) / MAXDATALEN;
 }
 
-protocolPacket getPacket(char *source, size_t sourceLen, int startingPosition) {
-    return createPacket(
-            startingPosition,
-            0,
-            (startingPosition + MAXDATALEN >= sourceLen),
-            source+startingPosition,
-            min(MAXDATALEN, sourceLen - startingPosition));
-}
-
 int verifyAndLoadFile(char buf[MAXDATALEN], char **source) {
     FILE *fp = fopen(buf, "r");
     int sourceLen = -1;
@@ -161,7 +152,14 @@ int main(int argc, char *argv[])
         int numberOfPacketsToSend = min(cwnd, numberOfPacketsLeftInFile(sourceLen, currentPosition));
         int pi;
         for (pi = 0; pi < numberOfPacketsToSend; pi++) {
-            sendPacket(conn, getPacket(source, sourceLen, currentPosition + pi*MAXDATALEN));
+            int startingPosition = currentPosition + pi*MAXDATALEN;
+            protocolPacket packet = createPacket(
+                    startingPosition,
+                    0,
+                    (startingPosition + MAXDATALEN >= sourceLen),
+                    source+startingPosition,
+                    min(MAXDATALEN, sourceLen - startingPosition));
+            sendPacket(conn, packet);
         }
     }
 
