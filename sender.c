@@ -33,27 +33,27 @@ int verifyAndLoadFile(char buf[MAXDATALEN], char **source) {
         return -1;
     }
 
-    source = malloc(sizeof(char) * fileSize + 1);
+    *source = malloc(sizeof(char) * fileSize + 1);
 
     // file size error
     if (fseek(fp, 0L, SEEK_SET) != 0){
         fprintf(stderr, "Error: file size error\n");
-        free(source);
+        free(*source);
         fclose(fp);
         return -1;
     }
 
-    sourceLen = fread(source, sizeof(char), fileSize, fp);
+    sourceLen = fread(*source, sizeof(char), fileSize, fp);
 
     // file reading error
     if(sourceLen == 0){
         fprintf(stderr, "Error: file reading error\n");
-        free(source);
+        free(*source);
         fclose(fp);
         return -1;
     }
 
-    source[sourceLen] = '\0';
+    (*source)[sourceLen] = '\0';
 
     fclose(fp);
     return sourceLen;
@@ -61,7 +61,7 @@ int verifyAndLoadFile(char buf[MAXDATALEN], char **source) {
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
+    if (argc != 3)
     {
         fprintf(stderr,"usage: sender <portnumber> <CWnd>\n");
         // fprintf(stderr,"usage: sender <portnumber> <CWnd> <Pl> <Pc>\n");
@@ -133,6 +133,7 @@ int main(int argc, char *argv[])
         sendPacket(conn, createFileNotFoundPacket());
         exit(1);
     }
+
     size_t sourceLen = loadFileRV;
 
     int finished = 0;
