@@ -139,16 +139,8 @@ int main(int argc, char *argv[])
     int currentPosition = 0;
     int cwnd = atoi(argv[2]);
 
-    protocolPacket packet;
-
-    memset(&packet, 0, sizeof(packet));
-    packet.seq = 0;
-    packet.ack = 0;
-    packet.fin = 0;
-    packet.len = 0;
-
     while (finished != 1) {
-        // sendMultiplePackets
+        // send the window of packets
         int numberOfPacketsToSend = min(cwnd, numberOfPacketsLeftInFile(sourceLen, currentPosition));
         int pi;
         for (pi = 0; pi < numberOfPacketsToSend; pi++) {
