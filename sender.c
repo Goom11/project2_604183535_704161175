@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     int numbytes;
     char buf[MAXDATALEN];
 
-    if ((numbytes = recvfrom(sockfd, buf, MAXDATALEN-1, 0, (struct sockaddr *)&conn.theirAddr, &conn.addrLen)) == -1) {
+    if ((numbytes = recvfrom(conn.sockfd, buf, MAXDATALEN-1, 0, (struct sockaddr *)&conn.theirAddr, &conn.addrLen)) == -1) {
         fprintf(stderr, "Error: failed to receive filename\n");
         exit(1);
     }
