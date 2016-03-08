@@ -49,12 +49,12 @@ int sendPacket(senderConnection conn, protocolPacket packet) {
     return numbytes;
 }
 
-protocolPacket receivePacket(int sockfd, struct sockaddr *srcAddr, socklen_t *addrLen){
+protocolPacket receivePacket(receiverConnection conn){
     protocolPacket packet;
     size_t packetSize = sizeof(packet);
     char *tempBuf = malloc(packetSize);
     memset(tempBuf, 0, packetSize);
-    int numbytes = recvfrom(sockfd, tempBuf, packetSize, 0, srcAddr, addrLen);
+    int numbytes = recvfrom(conn.sockfd, tempBuf, packetSize, 0, conn.srcAddr, conn.addrLen);
     memcpy((char *)&packet, tempBuf, packetSize);
     if (numbytes == -1) {
         packet.numbytes = -1;

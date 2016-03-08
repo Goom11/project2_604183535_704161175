@@ -45,6 +45,6 @@ void printPacket(protocolPacket packet);
 
 int sendPacket(senderConnection conn, protocolPacket packet);
 
-protocolPacket receivePacket(int sockfd, struct sockaddr *srcAddr, socklen_t *addrLen);
+protocolPacket receivePacket(receiverConnection conn);
 
 #endif
