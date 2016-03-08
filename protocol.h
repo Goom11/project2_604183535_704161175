@@ -25,6 +25,12 @@ protocolPacket createPacket(int seq, int ack, int fin, char *data, size_t dataLe
 
 protocolPacket createFileNotFoundPacket();
 
+typedef struct MyConnection {
+    int sockfd;
+    struct sockaddr *addr;
+    socklen_t *addrLen;
+} connection;
+
 typedef struct MySenderConnection {
     int sockfd;
     struct sockaddr_storage theirAddr;

@@ -1,6 +1,24 @@
 
 #include "protocol.h"
 
+int min(int a, int b) {
+    return (a < b) ? a : b;
+}
+
+int numberOfPacketsLeftInFile(size_t sourceLen, int currentPosition) {
+    // round up
+    return (sourceLen - currentPosition + (MAXDATALEN - 1)) / MAXDATALEN;
+}
+
+protocolPacket getPacket(char *source, size_t sourceLen, int startingPosition) {
+    return createPacket(
+            startingPosition,
+            0,
+            (startingPosition + MAXDATALEN >= sourceLen),
+            source+startingPosition,
+            min(MAXDATALEN, sourceLen - startingPosition));
+}
+
 int verifyAndLoadFile(char buf[MAXDATALEN], char **source) {
     FILE *fp = fopen(buf, "r");
     int sourceLen = -1;
@@ -123,16 +141,25 @@ int main(int argc, char *argv[])
     }
     size_t sourceLen = loadFileRV;
 
+    int finished = 0;
+    int currentPosition = 0;
     int cwnd = atoi(argv[2]);
 
     protocolPacket packet;
+
     memset(&packet, 0, sizeof(packet));
     packet.seq = 0;
     packet.ack = 0;
     packet.fin = 0;
     packet.len = 0;
 
-    while (packet.fin != 1) {
+    while (finished != 1) {
+        // sendMultiplePackets
+        int numberOfPacketsToSend = min(cwnd, numberOfPacketsLeftInFile(sourceLen, currentPosition));
+        int pi;
+        for (pi = 0; pi < numberOfPacketsToSend; pi++) {
+            sendPacket(conn, getPacket(source, sourceLen, currentPosition + pi*MAXDATALEN));
+        }
     }
 
 }
