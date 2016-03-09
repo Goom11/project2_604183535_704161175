@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     protocolPacket packet;
     memset(&packet, 0, sizeof(packet));
     packet.fin = 0;
-    size_t packetSize = sizeof(packet);
+    // size_t packetSize = sizeof(packet);
 
     //empty file to copy data to
     char newName[MAXDATALEN];
@@ -83,11 +83,14 @@ int main(int argc, char *argv[])
     int tracker = 0;
     char* fileBuf = malloc(MAXDATALEN);
 
+    printf("about to recieve file\n");
     while(packet.fin != 1) {
+        printf("not finished ofc\n");
         packet = receivePacket(conn);
+        printf("receieved packet: \n");
         printPacket(packet);
 
-        if(packet.numbytes == -1) {
+        if(packet.numbytesValid == 0) {
             fprintf(stderr, "Error: failed to receive file or packet\n");
             exit(1);
         } 
@@ -132,6 +135,8 @@ int main(int argc, char *argv[])
 
     fclose(fp);
     free(fileBuf);
+
+    return 0;
 }
 
 

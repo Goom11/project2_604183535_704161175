@@ -5,9 +5,26 @@ int min(int a, int b) {
     return (a < b) ? a : b;
 }
 
-int numberOfPacketsLeftInFile(size_t sourceLen, int currentPosition) {
+int numberOfPacketsLeftInFile(size_t sourceLen, size_t currentPosition) {
     // round up
     return (sourceLen - currentPosition + (MAXDATALEN - 1)) / MAXDATALEN;
+}
+
+int getPacketIndex(protocolPacket packet, size_t currentPosition) {
+    return (packet.seq - currentPosition) / MAXDATALEN;
+}
+
+int numberOfConsecutivelyReceivedPackets(int *window, int cwnd) {
+    int num = 0;
+    int i;
+    for(i = 0; i < cwnd; i++) {
+        if (window[i] == 1) {
+            num++;
+        } else {
+            break;
+        }
+    }
+    return num;
 }
 
 int verifyAndLoadFile(char buf[MAXDATALEN], char **source) {
@@ -136,26 +153,61 @@ int main(int argc, char *argv[])
 
     size_t sourceLen = loadFileRV;
 
-    int finished = 0;
-    int currentPosition = 0;
+    size_t currentPosition = 0;
     int cwnd = atoi(argv[2]);
 
-    while (finished != 1) {
+    printf("beginning sending file\n");
+    // we are finished if the currentPosition is past the end of the file
+    while (currentPosition < sourceLen) {
         // send the window of packets
         int numberOfPacketsToSend = min(cwnd, numberOfPacketsLeftInFile(sourceLen, currentPosition));
         int pi;
         for (pi = 0; pi < numberOfPacketsToSend; pi++) {
-            int startingPosition = currentPosition + pi*MAXDATALEN;
+            size_t startingPosition = currentPosition + pi*MAXDATALEN;
             protocolPacket packet = createPacket(
                     startingPosition,
                     0,
                     (startingPosition + MAXDATALEN >= sourceLen),
                     source+startingPosition,
                     min(MAXDATALEN, sourceLen - startingPosition));
+            printf("sending:\n");
+            printPacket(packet);
             sendPacket(conn, packet);
         }
-    }
 
+        int received;
+
+        // idk what's really going on here but apparently this is how select works...
+        fd_set set;
+        FD_ZERO(&set);
+        FD_SET(conn.sockfd, &set);
+
+        // setup window details
+        size_t windowSize = cwnd * sizeof(int);
+        int *window = (int *)malloc(windowSize);
+        memset(window, 0, windowSize);
+
+        // wait up to 3 seconds
+        struct timeval timeout = { .tv_sec = 3, .tv_usec = 0 };
+
+        printf("checking acks\n");
+        // while we receive packets, process them
+        while ((received = select(conn.sockfd+1, &set, NULL, NULL, &timeout)) >= 1) {
+            protocolPacket packet = receivePacket(conn);
+            int pi = getPacketIndex(packet, currentPosition);
+            window[pi] = 1;
+        }
+
+        // update window details
+        int windowShift = numberOfConsecutivelyReceivedPackets(window, cwnd);
+        currentPosition += MAXDATALEN * windowShift;
+    }
+    printf("done sending file, got final FINACK\n");
+
+    free(source);
+    close(conn.sockfd);
+
+    return 0;
 }
 
 

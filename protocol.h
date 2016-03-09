@@ -2,12 +2,14 @@
 #ifndef protocol
 #define protocol
 
+#include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
+#include <unistd.h>
+#include <sys/select.h>
 #include <sys/socket.h>
-#include <netdb.h>
+#include <sys/types.h>
 
 #define MAXDATALEN 512
 #define HEADERSIZE 20
@@ -19,6 +21,7 @@ typedef struct MyPacket {
     int len;
     char data[MAXDATALEN];
     size_t numbytes;
+    int numbytesValid;
 } protocolPacket;
 
 protocolPacket createPacket(int seq, int ack, int fin, char *data, size_t dataLen);

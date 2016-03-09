@@ -2,7 +2,7 @@
 #include "protocol.h"
 
 void printPacket(protocolPacket packet) {
-    if (packet.numbytes < 0) {
+    if (packet.numbytesValid == 0) {
         printf("Invalid packet, cannot print\n");
         return;
     }
@@ -28,6 +28,7 @@ protocolPacket createPacket(int seq, int ack, int fin, char *data, size_t dataLe
     packet.fin = fin;
     packet.len = dataLen;
     memcpy(packet.data, data, dataLen);
+    packet.numbytesValid = 1;
     return packet;
 }
 
@@ -36,25 +37,20 @@ connection createConnection(int sockfd, struct sockaddr *addr, socklen_t *addrLe
 }
 
 int sendPacket(connection conn, protocolPacket packet) {
-    size_t packetSize = sizeof(packet);
-    char *tempBuf = malloc(packetSize);
-    memset(tempBuf, 0, packetSize);
-    memcpy(tempBuf, (char *)&packet, packetSize);
-    int numbytes = sendto(conn.sockfd, tempBuf, packetSize, 0, (struct sockaddr *)conn.addr, *(conn.addrLen));
-    free(tempBuf);
-    return numbytes;
+    return sendto(
+            conn.sockfd,
+            (char *)&packet,
+            sizeof(packet),
+            0,
+            (struct sockaddr *)conn.addr,
+            *(conn.addrLen));
 }
 
 protocolPacket receivePacket(connection conn){
     protocolPacket packet;
-    size_t packetSize = sizeof(packet);
-    char *tempBuf = malloc(packetSize);
-    memset(tempBuf, 0, packetSize);
-    int numbytes = recvfrom(conn.sockfd, tempBuf, packetSize, 0, conn.addr, conn.addrLen);
-    memcpy((char *)&packet, tempBuf, packetSize);
+    int numbytes = recvfrom(conn.sockfd, (char *)&packet, sizeof(packet), 0, conn.addr, conn.addrLen);
     if (numbytes == -1) {
-        packet.numbytes = -1;
+        packet.numbytesValid = 0;
     }
-    free(tempBuf);
     return packet;
 }
