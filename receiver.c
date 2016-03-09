@@ -44,6 +44,16 @@ fileBuffer writeToFileBuffer(char *data, size_t dataLen, size_t position, fileBu
     return newFb;
 }
 
+void exportFileBufferToFile(fileBuffer fb, char *filename) {
+    FILE *fp = fopen(filename, "w+");
+    if (fp == NULL) {
+        fprintf(stderr, "Error: file cannot be created!\n");
+        exit(1);
+    }
+    fwrite(fb.buf, sizeof(char), fb.dataLen, fp);
+    fclose(fp);
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -108,19 +118,6 @@ int main(int argc, char *argv[])
     packet.fin = 0;
     // size_t packetSize = sizeof(packet);
 
-    //empty file to copy data to
-    char newName[MAXDATALEN];
-    strcpy(newName, "new_");
-    strcat(newName, argv[3]);
-
-    FILE *fp = fopen(newName, "w+");
-
-    if (fp == NULL){
-        printf("Error: new file cannot be created.");
-        exit(1);
-    }
-
-    int tracker = 0;
     fileBuffer fb = allocateNewFileBuffer();
 
     printf("about to recieve file\n");
@@ -146,7 +143,6 @@ int main(int argc, char *argv[])
             } else {
                 printf("Sent ACK #%d\n", packet.seq);
                 fb = writeToFileBuffer(packet.data, packet.len, packet.seq, fb);
-                tracker +=MAXDATALEN;
                 if (packet.fin == 1){
                     printf("FIN received\n");
                     printf("FINACK sent\n");
@@ -156,7 +152,11 @@ int main(int argc, char *argv[])
     }
     fprintf(stderr, "%s", fb.buf);
 
-    fclose(fp);
+    char newName[MAXDATALEN];
+    strcpy(newName, "new_");
+    strcat(newName, filename);
+
+    exportFileBufferToFile(fb, newName);
     deleteFileBuffer(fb);
 
     return 0;
