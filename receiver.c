@@ -19,12 +19,6 @@ fileBuffer allocateNewFileBuffer() {
     return (fileBuffer) { .buf = malloc(MAXDATALEN), .dataLen = 0, .bufLen = MAXDATALEN };
 }
 
-fileBuffer copyFileBuffer(fileBuffer fb) {
-    char *buf = malloc(fb.bufLen);
-    memcpy(buf, fb.buf, fb.bufLen);
-    return (fileBuffer) { .buf = buf, .dataLen = fb.dataLen, .bufLen = fb.bufLen };
-}
-
 void deleteFileBuffer(fileBuffer fb) {
     free(fb.buf);
 }
@@ -32,16 +26,14 @@ void deleteFileBuffer(fileBuffer fb) {
 // returns new fileBuffer, not modified old fileBuffer
 // also deletes the input fileBuffer so that you don't have to
 fileBuffer writeToFileBuffer(char *data, size_t dataLen, size_t position, fileBuffer fb) {
-    fileBuffer newFb = copyFileBuffer(fb);
-    deleteFileBuffer(fb);
-
-    if (position + dataLen > newFb.bufLen) {
-        newFb.bufLen = newFb.bufLen * 2;
-        newFb.buf = realloc(newFb.buf, newFb.bufLen);
+    if (position + dataLen > fb.bufLen) {
+        fb.bufLen = fb.bufLen * 2;
+        fb.buf = realloc(fb.buf, fb.bufLen);
     }
-    newFb.dataLen = max(newFb.dataLen, position + dataLen);
-    memcpy(newFb.buf + position, data, dataLen);
-    return newFb;
+
+    fb.dataLen = max(fb.dataLen, position + dataLen);
+    memcpy(fb.buf + position, data, dataLen);
+    return fb;
 }
 
 void exportFileBufferToFile(fileBuffer fb, char *filename) {
