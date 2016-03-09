@@ -5,6 +5,46 @@
 #include <stdlib.h>
 #include <string.h>
 
+int max(int a, int b) {
+    return (a > b) ? a : b;
+}
+
+typedef struct MyBuffer {
+    char *buf;
+    size_t dataLen;
+    size_t bufLen;
+} fileBuffer;
+
+fileBuffer createNewFileBuffer() {
+    return (fileBuffer) { .buf = malloc(MAXDATALEN), .dataLen = 0, .bufLen = MAXDATALEN };
+}
+
+fileBuffer copyFileBuffer(fileBuffer fb) {
+    char *buf = malloc(fb.bufLen);
+    memcpy(buf, fb.buf, fb.bufLen);
+    return (fileBuffer) { .buf = buf, .dataLen = fb.dataLen, .bufLen = fb.bufLen };
+}
+
+void deleteFileBuffer(fileBuffer fb) {
+    free(fb.buf);
+}
+
+// returns new fileBuffer, not modified old fileBuffer
+// also deletes the input fileBuffer so that you don't have to
+fileBuffer writeToFileBuffer(char *data, size_t dataLen, size_t position, fileBuffer fb) {
+    fileBuffer newFb = copyFileBuffer(fb);
+    deleteFileBuffer(fb);
+
+    if (position + dataLen > newFb.bufLen) {
+        newFb.bufLen = newFb.bufLen * 2;
+        newFb.buf = realloc(newFb.buf, newFb.bufLen);
+    }
+    newFb.dataLen = max(newFb.dataLen, position + dataLen);
+    memcpy(newFb.buf + position, data, dataLen);
+    return newFb;
+}
+
+
 int main(int argc, char *argv[])
 {
 
