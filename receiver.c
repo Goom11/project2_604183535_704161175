@@ -36,6 +36,7 @@ fileBuffer writeToFileBuffer(char *data, size_t dataLen, size_t position, fileBu
     return fb;
 }
 
+
 void exportFileBufferToFile(fileBuffer fb, char *filename) {
     FILE *fp = fopen(filename, "w+");
     if (fp == NULL) {
@@ -46,6 +47,49 @@ void exportFileBufferToFile(fileBuffer fb, char *filename) {
     fclose(fp);
 }
 
+typedef struct MyPacketBuffer {
+    protocolPacket *buf;
+    size_t packetLen;
+    size_t bufLen;
+} packetBuffer;
+
+packetBuffer allocateNewPacketBuffer() {
+    return (packetBuffer) { .buf = malloc(sizeof(protocolPacket)), .packetLen = 0, .bufLen = 1 };
+}
+
+void deletePacketBuffer(packetBuffer pb) {
+    free(pb.buf);
+}
+
+packetBuffer addPacketToPacketBuffer(protocolPacket packet, packetBuffer pb) {
+    size_t position = packet.seq / MAXDATALEN;
+    if (position >= pb.bufLen) {
+        pb.bufLen = pb.bufLen * 2;
+        pb.buf = realloc(pb.buf, pb.bufLen);
+    }
+
+    pb.packetLen = max(pb.packetLen, position);
+    memcpy(pb.buf + position, &packet, sizeof(packet));
+    return pb;
+}
+
+void exportPacketBufferToFile(packetBuffer fb, char *filename) {
+    size_t dataLen = fb.packetLen * MAXDATALEN;
+    char *data = malloc(dataLen);
+    size_t i;
+    for(i = 0; i < fb.packetLen; i++) {
+        memcpy(data + i * MAXDATALEN, fb.buf[i].data, fb.buf[i].len);
+    }
+
+    FILE *fp = fopen(filename, "w+");
+    if (fp == NULL) {
+        fprintf(stderr, "Error: file cannot be created!\n");
+        exit(1);
+    }
+    fwrite(data, sizeof(char), dataLen, fp);
+    free(data);
+    fclose(fp);
+}
 
 int main(int argc, char *argv[])
 {
@@ -89,7 +133,7 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    printf("Bound to socket, about to send requested filename\n");
+    fprintf(stderr, "Bound to socket, about to send requested filename\n");
 
     int numbytes;
     connection conn = createConnection(sockfd, p->ai_addr, &(p->ai_addrlen));
@@ -101,7 +145,7 @@ int main(int argc, char *argv[])
 
     freeaddrinfo(servinfo);
 
-    printf("Sent requested filename, waiting for file\n");
+    fprintf(stderr, "Sent requested filename, waiting for file\n");
 
 
     // for receive call, create zeroed packet
@@ -112,12 +156,10 @@ int main(int argc, char *argv[])
 
     fileBuffer fb = allocateNewFileBuffer();
 
-    printf("about to recieve file\n");
+    fprintf(stderr, "about to recieve file\n");
     while(packet.fin != 1) {
-        printf("not finished ofc\n");
         packet = receivePacket(conn);
-        printf("receieved packet: \n");
-        printPacket(packet);
+        fprintf(stderr, "receieved packet with seq: %d\n", packet.seq);
 
         if(packet.numbytesValid == 0) {
             fprintf(stderr, "Error: failed to receive file or packet\n");
@@ -130,19 +172,17 @@ int main(int argc, char *argv[])
             numbytes = sendPacket(conn, packet);
 
             if (numbytes == -1){
-                printf("ACK #%d lost\n", packet.seq);
+                fprintf(stderr, "ACK #%d lost\n", packet.seq);
                 packet.fin = 0;
             } else {
-                printf("Sent ACK #%d\n", packet.seq);
+                fprintf(stderr, "Sent ACK for packet with seq: %d\n", packet.seq);
                 fb = writeToFileBuffer(packet.data, packet.len, packet.seq, fb);
                 if (packet.fin == 1){
-                    printf("FIN received\n");
-                    printf("FINACK sent\n");
+                    fprintf(stderr, "FIN received and FINACK sent\n");
                 }
             }
         }
     }
-    fprintf(stderr, "%s", fb.buf);
 
     char newName[MAXDATALEN];
     strcpy(newName, "new_");
