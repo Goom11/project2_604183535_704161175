@@ -106,12 +106,12 @@ int main(int argc, char *argv[])
 
     for(p = servinfo; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            fprintf(stderr, "sender: socket");
+            fprintf(stderr, "sender: socket\n");
             continue;
         }
         if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
             close(sockfd);
-            fprintf(stderr, "sender: bind");
+            fprintf(stderr, "sender: bind\n");
             continue;
         }
         break;
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
 
     freeaddrinfo(servinfo);
 
-    printf("Bound to socket, now waiting for requested filename\n");
+    fprintf(stderr, "Bound to socket, now waiting for requested filename\n");
 
     struct sockaddr_storage addr;
     socklen_t addrLen = sizeof(addr);
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
     }
 
     buf[numbytes] = '\0';
-    printf("The requested filename is: %s\n", buf);
+    fprintf(stderr, "The requested filename is: %s\n", buf);
 
 
     char *source = NULL;
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
     size_t currentPosition = 0;
     int cwnd = atoi(argv[2]);
 
-    printf("beginning sending file\n");
+    fprintf(stderr, "beginning sending file\n");
     // we are finished if the currentPosition is past the end of the file
     while (currentPosition < sourceLen) {
         // send the window of packets
@@ -170,8 +170,7 @@ int main(int argc, char *argv[])
                     (startingPosition + MAXDATALEN >= sourceLen),
                     source+startingPosition,
                     min(MAXDATALEN, sourceLen - startingPosition));
-            printf("sending:\n");
-            printPacket(packet);
+            fprintf(stderr, "sending: packet seq: %d\n", packet.seq);
             sendPacket(conn, packet);
         }
 
@@ -190,19 +189,19 @@ int main(int argc, char *argv[])
         // wait up to 3 seconds
         struct timeval timeout = { .tv_sec = 3, .tv_usec = 0 };
 
-        printf("checking acks\n");
         // while we receive packets, process them
         while ((received = select(conn.sockfd+1, &set, NULL, NULL, &timeout)) >= 1) {
             protocolPacket packet = receivePacket(conn);
             int pi = getPacketIndex(packet, currentPosition);
             window[pi] = 1;
+            fprintf(stderr, "receiving ack for packet seq: %d\n", packet.seq);
         }
 
         // update window details
         int windowShift = numberOfConsecutivelyReceivedPackets(window, cwnd);
         currentPosition += MAXDATALEN * windowShift;
     }
-    printf("done sending file, got final FINACK\n");
+    fprintf(stderr, "done sending file, got final FINACK\n");
 
     free(source);
     close(conn.sockfd);
