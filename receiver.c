@@ -15,7 +15,7 @@ typedef struct MyBuffer {
     size_t bufLen;
 } fileBuffer;
 
-fileBuffer createNewFileBuffer() {
+fileBuffer allocateNewFileBuffer() {
     return (fileBuffer) { .buf = malloc(MAXDATALEN), .dataLen = 0, .bufLen = MAXDATALEN };
 }
 
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
     }
 
     int tracker = 0;
-    char* fileBuf = malloc(MAXDATALEN);
+    fileBuffer fb = allocateNewFileBuffer();
 
     printf("about to recieve file\n");
     while(packet.fin != 1) {
@@ -133,36 +133,19 @@ int main(int argc, char *argv[])
         if(packet.numbytesValid == 0) {
             fprintf(stderr, "Error: failed to receive file or packet\n");
             exit(1);
-        } 
-
-        else if(packet.seq == 0 && packet.fin == 1 && packet.len == 0) {
+        } else if(packet.seq == 0 && packet.fin == 1 && packet.len == 0) {
             fprintf(stderr, "Error: file not found\n");
             exit(1);
-        }
-
-        // corruption case goes here
-
-        else if (packet.seq < tracker - MAXDATALEN || packet.seq > MAXDATALEN){
-            printf("Packet out of order - ignore!\n");
-            packet.fin = 0;
-        }
-
-        else {
+        } else {
             packet.ack = 1;
             numbytes = sendPacket(conn, packet);
 
             if (numbytes == -1){
                 printf("ACK #%d lost\n", packet.seq);
                 packet.fin = 0;
-            }
-            if (numbytes == -2){
-                //corruption case
-                packet.fin = 0;
-            }
-
-            else{
+            } else {
                 printf("Sent ACK #%d\n", packet.seq);
-                memcpy(fileBuf+packet.seq, packet.data, packet.len);
+                fb = writeToFileBuffer(packet.data, packet.len, packet.seq, fb);
                 tracker +=MAXDATALEN;
                 if (packet.fin == 1){
                     printf("FIN received\n");
@@ -171,10 +154,10 @@ int main(int argc, char *argv[])
             }
         }
     }
-    fprintf(stderr, "%s", fileBuf);
+    fprintf(stderr, "%s", fb.buf);
 
     fclose(fp);
-    free(fileBuf);
+    deleteFileBuffer(fb);
 
     return 0;
 }
