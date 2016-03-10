@@ -53,6 +53,16 @@ void exportPacketBufferToFile(packetBuffer pb, char *filename) {
     fclose(fp);
 }
 
+int allPacketsInPacketBufferHaveBeenAcked(packetBuffer pb) {
+    size_t i;
+    for (i = 0; i < pb.packetLen; i++) {
+        if (pb.buf[i].ack != 1) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -123,10 +133,12 @@ int main(int argc, char *argv[])
     packet.fin = 0;
     // size_t packetSize = sizeof(packet);
 
+    int finHasBeenReceived = 0;
+
     packetBuffer pb = allocateNewPacketBuffer();
 
     fprintf(stderr, "about to recieve file\n");
-    while(packet.fin != 1) {
+    while(allPacketsInPacketBufferHaveBeenAcked(pb) == 0 || finHasBeenReceived == 0) {
         packet = receivePacket(conn);
         fprintf(stderr, "receieved packet with seq: %d\n", packet.seq);
 
@@ -146,10 +158,14 @@ int main(int argc, char *argv[])
             if (numbytes == -1){
                 fprintf(stderr, "ACK #%d lost\n", packet.seq);
                 packet.fin = 0;
+            } else if (numbytes == -2) {
+                fprintf(stderr, "ACK #%d corrupted\n", packet.seq);
+                packet.fin = 0;
             } else {
                 fprintf(stderr, "Sent ACK for packet with seq: %d\n", packet.seq);
                 pb = addPacketToPacketBuffer(packet, pb);
                 if (packet.fin == 1){
+                    finHasBeenReceived = 1;
                     fprintf(stderr, "FIN received and FINACK sent\n");
                 }
             }
