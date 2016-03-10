@@ -1,0 +1,4 @@
+Aman Agarwal - UID: 604183535
+Siddhant Khemka - UID: 704161175
+
+We did the initial part of the project together, following which Aman worked on the packet struct, receiver code, windowing for the file buffer, and checking for ACK corruption and Sid worked on some of the sender code, simulating packet loss and corruption and dealing with loss/corruption on sender end.
