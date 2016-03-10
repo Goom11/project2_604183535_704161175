@@ -1,10 +1,6 @@
 
 #include "protocol.h"
 
-int min(int a, int b) {
-    return (a < b) ? a : b;
-}
-
 int numberOfPacketsLeftInFile(size_t sourceLen, size_t currentPosition) {
     // round up
     return (sourceLen - currentPosition + (MAXDATALEN - 1)) / MAXDATALEN;

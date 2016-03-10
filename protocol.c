@@ -1,6 +1,14 @@
 
 #include "protocol.h"
 
+int min(int a, int b) {
+    return (a < b) ? a : b;
+}
+
+int max(int a, int b) {
+    return (a > b) ? a : b;
+}
+
 void printPacket(protocolPacket packet) {
     if (packet.numbytesValid == 0) {
         printf("Invalid packet, cannot print\n");

@@ -14,6 +14,9 @@
 #define MAXDATALEN 512
 #define HEADERSIZE 20
 
+int min(int a, int b);
+int max(int a, int b);
+
 typedef struct MyPacket {
     int seq;
     int ack;
