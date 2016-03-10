@@ -35,8 +35,12 @@ packetBuffer addPacketToPacketBuffer(protocolPacket packet, packetBuffer pb) {
     return pb;
 }
 
+size_t getPacketBufferDataLen(packetBuffer pb) {
+    return (pb.packetLen - 1) * MAXDATALEN + pb.buf[pb.packetLen - 1].len;
+}
+
 void exportPacketBufferToFile(packetBuffer pb, char *filename) {
-    size_t dataLen = pb.packetLen * MAXDATALEN;
+    size_t dataLen = getPacketBufferDataLen(pb);
     char *data = malloc(dataLen);
     size_t i;
     for(i = 0; i < pb.packetLen; i++) {
