@@ -94,15 +94,22 @@ void exportPacketBufferToFile(packetBuffer fb, char *filename) {
 int main(int argc, char *argv[])
 {
 
-    if (argc != 4)
+    if (argc != 6)
     {
-        fprintf(stderr,"usage: receiver <hostname> <portnumber> <filename>\n");
+        fprintf(stderr,"usage: receiver <hostname> <portnumber> <filename> <Pl> <Pc>\n");
         exit(1);
     }
 
     char *hostname = argv[1];
     char *port = argv[2];
     char *filename = argv[3];
+    double pl = atof(argv[4]);
+    double pc = atof(argv[5]);
+
+    if (pl <0 || pc <0 || pl >1 || pc>1){
+        fprintf(stderr, "Pl and Pc must both be between 0 and 1\n");
+        exit(1);
+    }
 
     struct addrinfo hints;
     memset(&hints, 0, sizeof hints);
@@ -169,7 +176,7 @@ int main(int argc, char *argv[])
             exit(1);
         } else {
             packet.ack = 1;
-            numbytes = sendPacket(conn, packet,0,0); //NO SIMULATION of packet loss or corruption in sending ACKs for now
+            numbytes = sendPacket(conn, packet, pl, pc);
 
             if (numbytes == -1){
                 fprintf(stderr, "ACK #%d lost\n", packet.seq);
