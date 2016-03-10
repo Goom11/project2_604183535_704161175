@@ -24,6 +24,7 @@ packetBuffer addPacketToPacketBuffer(protocolPacket packet, packetBuffer pb) {
     if (position >= pb.bufLen) {
         pb.bufLen = pb.bufLen * 2;
         pb.buf = realloc(pb.buf, pb.bufLen * sizeof(protocolPacket));
+        memset(pb.buf + pb.bufLen / 2, 0, pb.bufLen / 2);
     }
 
     pb.packetLen = max(pb.packetLen, position + 1);
