@@ -177,7 +177,16 @@ int main(int argc, char *argv[])
                     source+startingPosition,
                     min(MAXDATALEN, sourceLen - startingPosition));
             fprintf(stderr, "sending: packet seq: %d\n", packet.seq);
-            sendPacket(conn, packet, pl, pc);
+            int retVal = sendPacket(conn, packet, pl, pc);
+            if(retVal == -1){
+                fprintf(stderr, "Packet with seq #%d lost\n",packet.seq);
+            }
+            else if(retVal == -2){
+                fprintf(stderr, "Packet with seq #%d corrupted\n", packet.seq);
+            }
+            else {
+                printf("Packet with seq #%d successfully sent\n", packet.seq);
+            }
         }
 
         int received;
@@ -201,6 +210,8 @@ int main(int argc, char *argv[])
             int pi = getPacketIndex(packet, currentPosition);
             window[pi] = 1;
             fprintf(stderr, "receiving ack for packet seq: %d\n", packet.seq);
+
+            //NEED TO INSERT CODE TO DEAL WITH CORRUPT ACKS
         }
 
         // update window details
