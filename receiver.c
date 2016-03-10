@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
             exit(1);
         } else {
             packet.ack = 1;
-            numbytes = sendPacket(conn, packet);
+            numbytes = sendPacket(conn, packet,0,0); //NO SIMULATION of packet loss or corruption in sending ACKs for now
 
             if (numbytes == -1){
                 fprintf(stderr, "ACK #%d lost\n", packet.seq);

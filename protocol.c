@@ -38,6 +38,20 @@ connection createConnection(int sockfd, struct sockaddr *addr, socklen_t *addrLe
 }
 
 int sendPacket(connection conn, protocolPacket packet, double pl, double pc) {
+
+    int lossRate = (int)(pl*100);
+    int corruptionRate = (int)(pc*100);
+    int lost = ((rand()%100+1)<=lossRate);
+    int corrupt = ((rand()%100+1)<=corruptionRate);
+
+    if (lost){
+        //insert lost case here
+    }
+
+    if (corrupt){
+        packet.crc = 1;
+    }
+
     return sendto(
             conn.sockfd,
             (char *)&packet,
