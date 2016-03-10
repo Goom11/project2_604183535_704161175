@@ -177,11 +177,9 @@ int main(int argc, char *argv[])
             int retVal = sendPacket(conn, packet, pl, pc);
             if(retVal == -1){
                 fprintf(stderr, "Packet with seq #%d lost\n",packet.seq);
-            }
-            else if(retVal == -2){
+            } else if(retVal == -2){
                 fprintf(stderr, "Packet with seq #%d corrupted\n", packet.seq);
-            }
-            else {
+            } else {
                 printf("Packet with seq #%d successfully sent\n", packet.seq);
             }
         }
