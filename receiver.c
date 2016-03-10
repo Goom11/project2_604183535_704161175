@@ -9,44 +9,6 @@ int max(int a, int b) {
     return (a > b) ? a : b;
 }
 
-typedef struct MyBuffer {
-    char *buf;
-    size_t dataLen;
-    size_t bufLen;
-} fileBuffer;
-
-fileBuffer allocateNewFileBuffer() {
-    return (fileBuffer) { .buf = malloc(MAXDATALEN), .dataLen = 0, .bufLen = MAXDATALEN };
-}
-
-void deleteFileBuffer(fileBuffer fb) {
-    free(fb.buf);
-}
-
-// returns new fileBuffer, not modified old fileBuffer
-// also deletes the input fileBuffer so that you don't have to
-fileBuffer writeToFileBuffer(char *data, size_t dataLen, size_t position, fileBuffer fb) {
-    if (position + dataLen > fb.bufLen) {
-        fb.bufLen = fb.bufLen * 2;
-        fb.buf = realloc(fb.buf, fb.bufLen);
-    }
-
-    fb.dataLen = max(fb.dataLen, position + dataLen);
-    memcpy(fb.buf + position, data, dataLen);
-    return fb;
-}
-
-
-void exportFileBufferToFile(fileBuffer fb, char *filename) {
-    FILE *fp = fopen(filename, "w+");
-    if (fp == NULL) {
-        fprintf(stderr, "Error: file cannot be created!\n");
-        exit(1);
-    }
-    fwrite(fb.buf, sizeof(char), fb.dataLen, fp);
-    fclose(fp);
-}
-
 typedef struct MyPacketBuffer {
     protocolPacket *buf;
     size_t packetLen;
@@ -65,20 +27,20 @@ packetBuffer addPacketToPacketBuffer(protocolPacket packet, packetBuffer pb) {
     size_t position = packet.seq / MAXDATALEN;
     if (position >= pb.bufLen) {
         pb.bufLen = pb.bufLen * 2;
-        pb.buf = realloc(pb.buf, pb.bufLen);
+        pb.buf = realloc(pb.buf, pb.bufLen * sizeof(protocolPacket));
     }
 
-    pb.packetLen = max(pb.packetLen, position);
+    pb.packetLen = max(pb.packetLen, position + 1);
     memcpy(pb.buf + position, &packet, sizeof(packet));
     return pb;
 }
 
-void exportPacketBufferToFile(packetBuffer fb, char *filename) {
-    size_t dataLen = fb.packetLen * MAXDATALEN;
+void exportPacketBufferToFile(packetBuffer pb, char *filename) {
+    size_t dataLen = pb.packetLen * MAXDATALEN;
     char *data = malloc(dataLen);
     size_t i;
-    for(i = 0; i < fb.packetLen; i++) {
-        memcpy(data + i * MAXDATALEN, fb.buf[i].data, fb.buf[i].len);
+    for(i = 0; i < pb.packetLen; i++) {
+        memcpy(data + i * MAXDATALEN, pb.buf[i].data, pb.buf[i].len);
     }
 
     FILE *fp = fopen(filename, "w+");
@@ -161,7 +123,7 @@ int main(int argc, char *argv[])
     packet.fin = 0;
     // size_t packetSize = sizeof(packet);
 
-    fileBuffer fb = allocateNewFileBuffer();
+    packetBuffer pb = allocateNewPacketBuffer();
 
     fprintf(stderr, "about to recieve file\n");
     while(packet.fin != 1) {
@@ -186,7 +148,7 @@ int main(int argc, char *argv[])
                 packet.fin = 0;
             } else {
                 fprintf(stderr, "Sent ACK for packet with seq: %d\n", packet.seq);
-                fb = writeToFileBuffer(packet.data, packet.len, packet.seq, fb);
+                pb = addPacketToPacketBuffer(packet, pb);
                 if (packet.fin == 1){
                     fprintf(stderr, "FIN received and FINACK sent\n");
                 }
@@ -198,8 +160,8 @@ int main(int argc, char *argv[])
     strcpy(newName, "new_");
     strcat(newName, filename);
 
-    exportFileBufferToFile(fb, newName);
-    deleteFileBuffer(fb);
+    exportPacketBufferToFile(pb, newName);
+    deletePacketBuffer(pb);
 
     return 0;
 }
