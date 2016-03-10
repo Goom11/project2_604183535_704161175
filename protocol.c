@@ -27,7 +27,7 @@ protocolPacket createPacket(int seq, int ack, int fin, char *data, size_t dataLe
     packet.ack = ack;
     packet.fin = fin;
     packet.len = dataLen;
-    packet.crc = 0; //by default, packet is not corrupt
+    packet.crc = 0;         //by default, packet is not corrupt
     memcpy(packet.data, data, dataLen);
     packet.numbytesValid = 1;
     return packet;
@@ -37,7 +37,7 @@ connection createConnection(int sockfd, struct sockaddr *addr, socklen_t *addrLe
     return (connection) { .sockfd = sockfd, .addr = addr, .addrLen = addrLen };
 }
 
-int sendPacket(connection conn, protocolPacket packet) {
+int sendPacket(connection conn, protocolPacket packet, double pl, double pc) {
     return sendto(
             conn.sockfd,
             (char *)&packet,

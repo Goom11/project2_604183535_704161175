@@ -39,7 +39,7 @@ connection createConnection(int sockfd, struct sockaddr *addr, socklen_t *addrLe
 
 void printPacket(protocolPacket packet);
 
-int sendPacket(connection conn, protocolPacket packet);
+int sendPacket(connection conn, protocolPacket packet, double pl, double pc);
 
 protocolPacket receivePacket(connection conn);
 

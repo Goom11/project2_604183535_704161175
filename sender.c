@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
     int loadFileRV = verifyAndLoadFile(buf, &source);
 
     if (loadFileRV == -1) {
-        sendPacket(conn, createFileNotFoundPacket());
+        sendPacket(conn, createFileNotFoundPacket(), pl, pc);
         exit(1);
     }
 
@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
                     source+startingPosition,
                     min(MAXDATALEN, sourceLen - startingPosition));
             fprintf(stderr, "sending: packet seq: %d\n", packet.seq);
-            sendPacket(conn, packet);
+            sendPacket(conn, packet, pl, pc);
         }
 
         int received;
