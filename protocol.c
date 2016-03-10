@@ -52,11 +52,11 @@ int sendPacket(connection conn, protocolPacket packet, double pl, double pc) {
     int lost = ((rand()%100+1)<=lossRate);
     int corrupt = ((rand()%100+1)<=corruptionRate);
 
-    if (lost){
+    if (lost) {
         return -1;
     }
 
-    if (corrupt){
+    if (corrupt) {
         packet.crc = 1;
         sendto(
             conn.sockfd,

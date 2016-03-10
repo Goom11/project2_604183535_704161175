@@ -163,6 +163,8 @@ int main(int argc, char *argv[])
             } else if (numbytes == -2) {
                 fprintf(stderr, "ACK #%d corrupted\n", packet.seq);
                 packet.fin = 0;
+                packet.ack = 0;
+                pb = addPacketToPacketBuffer(packet, pb);
             } else {
                 packet.ack = 1;
                 fprintf(stderr, "Sent ACK for packet with seq: %d\n", packet.seq);

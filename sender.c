@@ -202,10 +202,12 @@ int main(int argc, char *argv[])
         // while we receive packets, process them
         while ((received = select(conn.sockfd+1, &set, NULL, NULL, &timeout)) >= 1) {
             protocolPacket packet = receivePacket(conn);
-            int pi = getPacketIndex(packet, currentPosition);
-            if (packet.crc == 1) {
+            if (packet.numbytesValid == 0) {
+                fprintf(stderr, "Error : no packet was received?!?\n");
+            } else if (packet.crc == 1) {
                 fprintf(stderr, "receiving CORRUPT ack for packet seq: %d\n", packet.seq);
             } else {
+                int pi = getPacketIndex(packet, currentPosition);
                 window[pi] = 1;
                 fprintf(stderr, "receiving ack for packet seq: %d\n", packet.seq);
             }
