@@ -45,11 +45,19 @@ int sendPacket(connection conn, protocolPacket packet, double pl, double pc) {
     int corrupt = ((rand()%100+1)<=corruptionRate);
 
     if (lost){
-        //insert lost case here
+        return -1;
     }
 
     if (corrupt){
         packet.crc = 1;
+        sendto(
+            conn.sockfd,
+            (char *)&packet,
+            sizeof(packet),
+            0,
+            (struct sockaddr *)conn.addr,
+            *(conn.addrLen));
+        return -2;
     }
 
     return sendto(
