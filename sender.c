@@ -78,14 +78,20 @@ int verifyAndLoadFile(char buf[MAXDATALEN], char **source) {
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3)
+    if (argc != 5)
     {
-        fprintf(stderr,"usage: sender <portnumber> <CWnd>\n");
-        // fprintf(stderr,"usage: sender <portnumber> <CWnd> <Pl> <Pc>\n");
+        fprintf(stderr,"usage: sender <portnumber> <CWnd> <Pl> <Pc>\n");
         exit(1);
     }
 
     char *port = argv[1];
+    double pl = atof(argv[3]);
+    double pc = atof(argv[4]);
+
+    if (pl < 0 || pc < 0 || pl > 1 || pc > 1){
+        fprintf(stderr,"Pl and Pc must both be between 0 and 1\n");
+        exit(1);
+    }
 
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
