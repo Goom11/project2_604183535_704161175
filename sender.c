@@ -205,10 +205,10 @@ int main(int argc, char *argv[])
         while ((received = select(conn.sockfd+1, &set, NULL, NULL, &timeout)) >= 1) {
             protocolPacket packet = receivePacket(conn);
             int pi = getPacketIndex(packet, currentPosition);
-            window[pi] = 1;
+            if (packet.crc != 1) {
+                window[pi] = 1;
+            }
             fprintf(stderr, "receiving ack for packet seq: %d\n", packet.seq);
-
-            //NEED TO INSERT CODE TO DEAL WITH CORRUPT ACKS
         }
 
         // update window details
