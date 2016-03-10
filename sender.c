@@ -156,7 +156,8 @@ int main(int argc, char *argv[])
     size_t sourceLen = loadFileRV;
 
     size_t currentPosition = 0;
-    int cwnd = atoi(argv[2]);
+    int cwndInBytes = atoi(argv[2]);
+    int cwnd = max(1, cwndInBytes / MAXDATALEN);
 
     fprintf(stderr, "beginning sending file\n");
     // we are finished if the currentPosition is past the end of the file
