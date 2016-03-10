@@ -174,7 +174,10 @@ int main(int argc, char *argv[])
         } else if(packet.seq == 0 && packet.fin == 1 && packet.len == 0) {
             fprintf(stderr, "Error: file not found\n");
             exit(1);
-        } else {
+        } else if (packet.crc == 1){
+            fprintf(stderr,"Error: packet is corrupt\n");
+            packet.fin = 0; //to make sure that it does not end on a corrupted packet
+        }else {
             packet.ack = 1;
             numbytes = sendPacket(conn, packet, pl, pc);
 
