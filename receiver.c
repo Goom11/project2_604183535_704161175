@@ -149,12 +149,13 @@ int main(int argc, char *argv[])
         } else if(packet.seq == 0 && packet.fin == 1 && packet.len == 0) {
             fprintf(stderr, "Error: file not found\n");
             exit(1);
-        } else if (packet.crc == 1){
+        } else if (packet.crc == 1) {
             fprintf(stderr,"Error: packet is corrupt\n");
             packet.fin = 0; //to make sure that it does not end on a corrupted packet
-        }else {
+        } else {
             packet.ack = 1;
             numbytes = sendPacket(conn, packet, pl, pc);
+            packet.ack = 0;
 
             if (numbytes == -1){
                 fprintf(stderr, "ACK #%d lost\n", packet.seq);
@@ -163,6 +164,7 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "ACK #%d corrupted\n", packet.seq);
                 packet.fin = 0;
             } else {
+                packet.ack = 1;
                 fprintf(stderr, "Sent ACK for packet with seq: %d\n", packet.seq);
                 pb = addPacketToPacketBuffer(packet, pb);
                 if (packet.fin == 1){
