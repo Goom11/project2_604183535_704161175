@@ -154,6 +154,7 @@ int main(int argc, char *argv[])
             packet.fin = 0; //to make sure that it does not end on a corrupted packet
         } else {
             packet.ack = 1;
+            packet.crc = 0;
             numbytes = sendPacket(conn, packet, pl, pc);
             packet.ack = 0;
 
