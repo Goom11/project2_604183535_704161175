@@ -19,6 +19,7 @@ typedef struct MyPacket {
     int ack;
     int fin;
     int len;
+    int crc;
     char data[MAXDATALEN];
     size_t numbytes;
     int numbytesValid;

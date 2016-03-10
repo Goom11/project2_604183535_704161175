@@ -27,6 +27,7 @@ protocolPacket createPacket(int seq, int ack, int fin, char *data, size_t dataLe
     packet.ack = ack;
     packet.fin = fin;
     packet.len = dataLen;
+    packet.crc = 0; //by default, packet is not corrupt
     memcpy(packet.data, data, dataLen);
     packet.numbytesValid = 1;
     return packet;
